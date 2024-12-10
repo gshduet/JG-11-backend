@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}게시글 상세 - FastAPI 블로그{% endblock %}
+
+{% block content %}
+<div id="post-detail">
+    <!-- 게시글 상세 내용이 여기에 동적으로 로드됩니다 -->
+</div>
+
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn btn-warning me-2" onclick="showEditPostModal()">수정</button>
+    <button class="btn btn-danger" onclick="deletePost()">삭제</button>
+</div>
+
+<div class="mt-4">
+    <h3>댓글</h3>
+    <!-- 댓글 작성 폼 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form id="comment-form">
+                <div class="mb-3">
+                    <textarea class="form-control" id="comment-content" rows="2" placeholder="댓글을 입력하세요..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">댓글 작성</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 댓글 목록 -->
+    <div id="comments-list">
+        <!-- 댓글 목록이 여기에 동적으로 로드됩니다 -->
+    </div>
+</div>
+
+<!-- 글 수정 모달 -->
+<div class="modal" id="editPostModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">글 수정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-post-form">
+                    <div class="mb-3">
+                        <label for="edit-post-title" class="form-label">제목</label>
+                        <input type="text" class="form-control" id="edit-post-title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-post-content" class="form-label">내용</label>
+                        <textarea class="form-control" id="edit-post-content" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">수정</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 댓글 수정 모달 -->
+<div class="modal" id="editCommentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">댓글 수정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-comment-form">
+                    <input type="hidden" id="edit-comment-id">
+                    <div class="mb-3">
+                        <label for="edit-comment-content" class="form-label">내용</label>
+                        <textarea class="form-control" id="edit-comment-content" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">수정</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const postId = {{ post_id }};
+let currentUser = null;
+
+// 현재 로그인한 사용자 정보 가져오기
+async function getCurrentUser() {
+    try {
+        const response = await fetch('/api/users/me');
+        if (response.ok) {
+            currentUser = await response.json();
+        }
+    } catch (error) {
+        console.error('사용자 정보를 가져오는데 실패했습니다:', error);
+    }
+}
+
+// 게시글 상세 내용 로드
+async function loadPostDetail() {
+    try {
+        const response = await fetch(`/api/posts/${postId}`);
+        const post = await response.json();
+        
+        // 게시글 내용 표시
+        document.getElementById('post-detail').innerHTML = `
+            <h1>${post.title}</h1>
+            <p class="text-muted">작성자: ${post.user_name}</p>
+            <div class="mt-4">
+                ${post.content}
+            </div>
+        `;
+
+        // 수정/삭제 버튼 표시 여부 설정
+        const buttonsContainer = document.querySelector('.d-flex.justify-content-end.mb-3');
+        if (currentUser && currentUser.user_name === post.user_name) {
+            buttonsContainer.style.display = 'flex';  // 작성자인 경우 버튼 표시
+        } else {
+            buttonsContainer.style.display = 'none';  // 작성자가 아닌 경우 버튼 숨김
+        }
+    } catch (error) {
+        console.error('게시글을 불러오는데 실패했습니다:', error);
+    }
+}
+
+// 댓글 목록 로드
+async function loadComments() {
+    try {
+        const response = await fetch(`/api/comments?post_id=${postId}`);
+        const comments = await response.json();
+        
+        document.getElementById('comments-list').innerHTML = comments.map(comment => `
+            <div class="card mb-2">
+                <div class="card-body">
+                    <p class="card-text">${comment.content}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">작성자: ${comment.user_name}</small>
+                        ${currentUser && currentUser.user_name === comment.user_name ? `
+                            <div>
+                                <button class="btn btn-sm btn-warning me-1" onclick="showEditCommentModal(${comment.id}, '${comment.content}')">수정</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteComment(${comment.id})">삭제</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('댓글을 불러오는데 실패했습니다:', error);
+    }
+}
+
+// 댓글 작성
+document.getElementById('comment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const content = document.getElementById('comment-content').value;
+    
+    try {
+        const response = await fetch(`/api/comments?post_id=${postId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+
+        if (response.ok) {
+            document.getElementById('comment-content').value = '';
+            await loadComments();
+        } else {
+            alert('댓글 작성 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        alert('댓글 작성 중 오류가 발생했습니다.');
+    }
+});
+
+// 댓글 수정 모달 표시
+function showEditCommentModal(commentId, content) {
+    document.getElementById('edit-comment-id').value = commentId;
+    document.getElementById('edit-comment-content').value = content;
+    const modal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+    modal.show();
+}
+
+// 댓글 수정
+document.getElementById('edit-comment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const commentId = document.getElementById('edit-comment-id').value;
+    const content = document.getElementById('edit-comment-content').value;
+    
+    try {
+        const response = await fetch(`/api/comments/${commentId}/?post_id=${postId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+
+        if (response.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editCommentModal'));
+            modal.hide();
+            await loadComments();
+        } else {
+            const errorData = await response.json();
+            alert(errorData.detail || '댓글 수정 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('댓글 수정 중 오류가 발생했습니다.');
+    }
+});
+
+// 댓글 삭제
+async function deleteComment(commentId) {
+    if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
+
+    try {
+        const response = await fetch(`/api/comments/${commentId}/?post_id=${postId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            await loadComments();
+        } else {
+            const errorData = await response.json();
+            alert(errorData.detail || '댓글 삭제 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('댓글 삭제 중 오류가 발생했습니다.');
+    }
+}
+
+// 게시글 수정 모달 표시
+async function showEditPostModal() {
+    try {
+        const response = await fetch(`/api/posts/${postId}`);
+        const post = await response.json();
+        
+        // 모달에 현재 게시글 내용 채우기
+        document.getElementById('edit-post-title').value = post.title;
+        document.getElementById('edit-post-content').value = post.content;
+        
+        const modal = new bootstrap.Modal(document.getElementById('editPostModal'));
+        modal.show();
+    } catch (error) {
+        console.error('게시글 정보를 불러오는데 실패했습니다:', error);
+        alert('게시글 정보를 불러오는데 실패했습니다.');
+    }
+}
+
+// 게시글 수정
+document.getElementById('edit-post-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('edit-post-title').value;
+    const content = document.getElementById('edit-post-content').value;
+    
+    try {
+        const response = await fetch(`/api/posts/${postId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title, content })
+        });
+
+        if (response.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editPostModal'));
+            modal.hide();
+            await loadPostDetail();  // 게시글 내용 새로고침
+        } else {
+            const errorData = await response.json();
+            alert(errorData.detail || '게시글 수정 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('게시글 수정 중 오류가 발생했습니다.');
+    }
+});
+
+// 게시글 삭제
+async function deletePost() {
+    if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
+
+    try {
+        const response = await fetch(`/api/posts/${postId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert('게시글이 삭제되었습니다.');
+            window.location.href = '/';  // 목록 페이지로 이동
+        } else {
+            const errorData = await response.json();
+            alert(errorData.detail || '게시글 삭제 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+    }
+}
+
+// 페이지 로드 시 실행
+document.addEventListener('DOMContentLoaded', async () => {
+    await getCurrentUser();
+    await loadPostDetail();
+    await loadComments();
+});
+</script>
+{% endblock %} 

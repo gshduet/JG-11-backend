@@ -209,7 +209,7 @@ async def delete_comment(
         db.add(comment)
         db.commit()
 
-    except HTTPException:
+    except HTTPException as e:
         raise
     except Exception as e:
         db.rollback()

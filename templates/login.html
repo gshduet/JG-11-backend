@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - FastAPI 블로그{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="text-center mb-4">로그인</h2>
+        <div class="card">
+            <div class="card-body">
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">이메일</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">비밀번호</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">로그인</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+    };
+
+    try {
+        const response = await fetch('/api/users/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            window.location.href = '/';
+        } else {
+            alert(data.detail || '로그인 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        alert('로그인 중 오류가 발생했습니다.');
+    }
+});
+</script>
+{% endblock %} 

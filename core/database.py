@@ -7,7 +7,7 @@ settings = get_settings()
 
 engine = create_engine(
     settings.SYNC_DATABASE_URL,
-    echo=True,
+    # echo=True,
     pool_pre_ping=True,
     pool_size=settings.db.DB_POOL_SIZE,
     max_overflow=settings.db.DB_MAX_OVERFLOW,
