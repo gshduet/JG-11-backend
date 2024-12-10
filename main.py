@@ -3,12 +3,34 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 
 from apis.users import user_router
 from apis.posts import post_router
 from apis.comments import comment_router
 
 app = FastAPI()
+
+# 운영 환경용 CORS 설정
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+    ],
+    expose_headers=["Content-Length", "Content-Range"],
+    max_age=600,  # 프리플라이트 요청 캐시 시간 (초)
+)
 
 # 정적 파일과 템플릿 설정
 app.mount("/static", StaticFiles(directory="static"), name="static")
