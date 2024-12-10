@@ -191,7 +191,7 @@ document.getElementById('edit-comment-form').addEventListener('submit', async (e
     const content = document.getElementById('edit-comment-content').value;
     
     try {
-        const response = await fetch(`/api/comments/${commentId}/?post_id=${postId}`, {
+        const response = await fetch(`/api/comments/${commentId}?post_id=${postId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
@@ -218,7 +218,7 @@ async function deleteComment(commentId) {
     if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
 
     try {
-        const response = await fetch(`/api/comments/${commentId}/?post_id=${postId}`, {
+        const response = await fetch(`/api/comments/${commentId}?post_id=${postId}`, {
             method: 'DELETE'
         });
 

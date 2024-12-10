@@ -91,6 +91,7 @@ async def signin(
             key="access_token",
             value=token_value,
             httponly=True,
+            secure=True,
             samesite="lax",
             max_age=3600,
         )
@@ -126,6 +127,6 @@ async def signout(response: Response):
     access_token 쿠키를 제거합니다.
     """
     # 쿠키 삭제
-    response.delete_cookie(key="access_token", httponly=True, samesite="lax")
+    response.delete_cookie(key="access_token", httponly=True, secure=True, samesite="lax")
 
     return {"message": "로그아웃 되었습니다."}
