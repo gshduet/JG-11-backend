@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Jungle Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="text-center mb-4">회원가입</h2>
+        <div class="card">
+            <div class="card-body">
+                <form id="signup-form">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">이메일</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="user_name" class="form-label">이름</label>
+                        <input type="text" class="form-control" id="user_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">비밀번호</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password_check" class="form-label">비밀번호 확인</label>
+                        <input type="password" class="form-control" id="password_check" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">가입하기</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        user_name: document.getElementById('user_name').value,
+        password: document.getElementById('password').value,
+        password_check: document.getElementById('password_check').value
+    };
+
+    try {
+        const response = await fetch('/api/users/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
+            window.location.href = '/login';
+        } else {
+            alert(data.detail || '회원가입 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        alert('회원가입 중 오류가 발생했습니다.');
+    }
+});
+</script>
+{% endblock %}

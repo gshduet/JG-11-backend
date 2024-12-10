@@ -69,6 +69,14 @@ app.include_router(post_router)
 app.include_router(comment_router)
 
 
+@app.get("/health")
+async def health_check(request: Request):
+    """
+    서버 상태를 확인하는 엔드포인트입니다.
+    """
+    return {"status": "ok"}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """
