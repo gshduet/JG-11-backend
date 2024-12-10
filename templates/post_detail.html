@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}게시글 상세 - FastAPI 블로그{% endblock %}
+{% block title %}Jungle Blog{% endblock %}
 
 {% block content %}
 <div id="post-detail">
@@ -247,7 +247,7 @@ async function showEditPostModal() {
         const modal = new bootstrap.Modal(document.getElementById('editPostModal'));
         modal.show();
     } catch (error) {
-        console.error('게시글 정보를 불러오는데 실패했습니다:', error);
+        console.error('게시글 ���보를 불러오는데 실패했습니다:', error);
         alert('게시글 정보를 불러오는데 실패했습니다.');
     }
 }
