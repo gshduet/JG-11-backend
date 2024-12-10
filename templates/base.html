@@ -46,7 +46,6 @@
         const authButtons = document.getElementById('auth-buttons');
         if (isLoggedIn) {
             authButtons.innerHTML = `
-                <span class="nav-link me-3">환영합니다, ${userName}님!</span>
                 <button onclick="logout()" class="btn btn-outline-danger">로그아웃</button>
             `;
         } else {
