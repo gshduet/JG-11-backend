@@ -22,3 +22,7 @@ class SoftDelete(SQLModel):
 
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.deleted_at = datetime.now()

@@ -11,7 +11,7 @@ class Post(TimeStamp, SoftDelete, table=True):
     content: str
 
     # 외래키 관계
-    user_id: int = Field(foreign_key="user.id")
+    user_uuid: str = Field(foreign_key="user.uuid")
 
 
 class Comment(TimeStamp, SoftDelete, table=True):
@@ -19,5 +19,5 @@ class Comment(TimeStamp, SoftDelete, table=True):
     content: str
 
     # 외래키 관계
-    user_id: int = Field(foreign_key="user.id")
+    user_uuid: str = Field(foreign_key="user.uuid")
     post_id: int = Field(foreign_key="post.id")
